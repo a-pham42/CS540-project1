@@ -10,3 +10,13 @@ The required scheduling algorithms are:
   - STCF (shortest time-to-completion first)
   - RR (round robin)
   - MLFQ (multi-level feedback queue)
+
+The requirements of this project are:
+  - Use `Next.js` or `React.js` to build a single-page application (SPA) 
+  - Each algorithm should be implemented as a separate function
+  - Processes should be generated randomly
+  - The user should be able to set the number of processes and the time quantum (for RR).
+  - The user should be able to run each algorithm and see the results.
+  - The user should be able to run all algorithms and see the results side by side.
+  - Use animation to show the progress of each algorithm.
+  - Use `chart.js` to show the results as a bar chart.
