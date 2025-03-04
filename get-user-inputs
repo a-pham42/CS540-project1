@@ -1,0 +1,52 @@
+import React, { useState } from 'react';
+
+
+function NumberOfProcesses(){
+
+  const [numberInput, setNumberInput] = useState(''); // initial value is empty
+
+  // handle changes in the input field
+  function handleInputChange(event) {
+
+    // convert the user input into an integer
+    const value = parseInt(event.target.value, 10);
+
+    // only update the number input if the user entered a valid input
+    if (!isNaN(value) && value >= 1 && value <= 10){
+      setNumberInput(value);
+    }
+    // allow empty input if user clears input
+    else if (event.target.value === ""){
+      setNumberInput('');
+    }
+  }
+
+  return (
+    <form>
+
+      <input 
+      type="text" 
+      placeholder="Enter number of processes"
+      value={numberInput}
+      onChange={handleInputChange}
+      />
+
+      <p> You entered: {numberInput}</p>
+
+    </form>
+  );
+}
+
+export default function MyApp() {
+
+  return (
+    <div>
+
+      <h1> Welcome to the Scheduling Algorithm Simulator</h1>
+      <NumberOfProcesses />
+
+    </div>
+  );
+  
+
+}
