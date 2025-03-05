@@ -2,6 +2,50 @@ import './App.css'
 import React, { useState } from 'react';
 
 
+// generate random processes
+function RandomProcessGenerator({numOfProcesses}){
+
+  const [randomTimes, setRandomTimes] = useState([]); // initial values are empty
+
+  // function that generates a list of random times from 100ms to 1000ms
+  function generateRandomTime(){
+
+    const times = []; // initiallize list "times"
+    for(let i = 0; i < numOfProcesses; i++){
+      const time = Math.floor(Math.random() * (1000 - 100 + 1)) + 100; // generate random number from 100 to 1000
+      times.push(time);
+    }
+    setRandomTimes(times); // update state of randomTimes
+  }
+
+  // only generate numbers if numOfProcesses is greater than 0
+  React.useEffect(() => {
+    if (numOfProcesses > 0) {
+      generateRandomTime(); // generate the random numbers
+    }
+  }, [numOfProcesses]); // re-run whenever numOfProcesses changes
+
+  return (
+
+    <div>
+      {randomTimes.length > 0 ? (
+        <div>
+          <ul>
+            <p> Time for each process (in ms): </p>
+            {randomTimes.map((num, index) => (
+              <li key={index}>{num}</li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        ''
+      )}
+    </div>
+
+  );
+
+}
+
 
 // allow user to set number of processes
 function NumberOfProcesses(){
@@ -29,17 +73,21 @@ function NumberOfProcesses(){
 
       <input 
       type="text" 
-      placeholder="Enter number of processes"
+      placeholder="Enter number..."
       value={numberInput}
       onChange={handleInputChange}
       />
 
       <p> Number of Processes: {numberInput}</p>
 
+      <RandomProcessGenerator numOfProcesses={numberInput} />
+
+
     </form>
   );
 
 }
+
 
 // allow user to set length of time slice (for round robin)
 function TimeSliceLength(){
@@ -67,7 +115,7 @@ function TimeSliceLength(){
 
       <input 
       type="text" 
-      placeholder="Enter time slice length for round robin (in ms)"
+      placeholder="Enter number..."
       value={numberInput}
       onChange={handleInputChange}
       />
@@ -85,8 +133,11 @@ export default function MyApp() {
     <div>
 
       <h1> Welcome to the Scheduling Algorithm Simulator</h1>
+
+      <p> Enter Number of Processes: </p>
       <NumberOfProcesses />
       {' '}
+      <p> Enter Time Quantum for Round Robin (in ms): </p>
       <TimeSliceLength />
 
     </div>
