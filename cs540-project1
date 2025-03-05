@@ -52,23 +52,24 @@ function ProcessTable({processData}){
         <thead>
           <tr>
             <th>Process</th>
-            <th>Process Length (ms)</th>
+            {processData.map((process) => (
+              <td key={process.name}> {process.name} </td>
+          ))}
           </tr>
         </thead>
         <tbody>
-          {processData.map((process) => (
-            <tr key={process.name}>
-              <td>{process.name}</td>
-              <td>{process.length}</td>
-            </tr>
+          <tr>
+            <th>Process Length (ms)</th>
+            {processData.map((process) => (
+              <td key={process.name}> {process.length} </td>
           ))}
+          </tr>
         </tbody>
       </table>
     </div>
   );
 
 };
-
 
 
 // allow user to set number of processes
@@ -151,6 +152,9 @@ function TimeSliceLength(){
 
 
 
+
+
+
 export default function MyApp() {
 
   return (
@@ -165,6 +169,7 @@ export default function MyApp() {
 
       <h4>Enter Time Quantum for Round Robin (100ms-1000ms): </h4>
       <TimeSliceLength />
+
 
     </div>
   );
