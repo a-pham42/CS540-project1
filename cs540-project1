@@ -25,26 +25,50 @@ function RandomProcessGenerator({numOfProcesses}){
     }
   }, [numOfProcesses]); // re-run whenever numOfProcesses changes
 
+  
+  const namesList = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
+  const tableData = [];
+  for(let i = 0; i < numOfProcesses; i++){
+    tableData.push({name: namesList[i], length: randomTimes[i]});
+  };
+
+
   return (
-
     <div>
-      {randomTimes.length > 0 ? (
-        <div>
-          <ul>
-            <p> Time for each process (in ms): </p>
-            {randomTimes.map((num, index) => (
-              <li key={index}>{num}</li>
-            ))}
-          </ul>
-        </div>
-      ) : (
-        ''
-      )}
+      <ProcessTable processData = {tableData} />
     </div>
-
   );
 
 }
+
+
+// create table of processes
+function ProcessTable({processData}){
+
+  return(
+    <div>
+      <h2>Process Information</h2>
+      <table border="1" cellPadding="10">
+        <thead>
+          <tr>
+            <th>Process</th>
+            <th>Process Length (ms)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {processData.map((process) => (
+            <tr key={process.name}>
+              <td>{process.name}</td>
+              <td>{process.length}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+};
+
 
 
 // allow user to set number of processes
@@ -59,14 +83,15 @@ function NumberOfProcesses(){
     const value = parseInt(event.target.value, 10);
 
     // only update the number input if the user entered a valid input
-    if (!isNaN(value) && value >= 1 && value <= 10){
+    if (!isNaN(value) && value >= 1 && value <= 9){
       setNumberInput(value);
     }
     // allow empty input if user clears input
     else if (event.target.value === ""){
       setNumberInput('');
     }
-  }
+
+  };
 
   return (
     <form>
@@ -78,15 +103,12 @@ function NumberOfProcesses(){
       onChange={handleInputChange}
       />
 
-      <p> Number of Processes: {numberInput}</p>
-
       <RandomProcessGenerator numOfProcesses={numberInput} />
-
 
     </form>
   );
 
-}
+};
 
 
 // allow user to set length of time slice (for round robin)
@@ -127,6 +149,8 @@ function TimeSliceLength(){
 
 }
 
+
+
 export default function MyApp() {
 
   return (
@@ -134,10 +158,12 @@ export default function MyApp() {
 
       <h1> Welcome to the Scheduling Algorithm Simulator</h1>
 
-      <p> Enter Number of Processes: </p>
+      <h4> Enter Number of Processes (1-9): </h4>
       <NumberOfProcesses />
-      {' '}
-      <p> Enter Time Quantum for Round Robin (in ms): </p>
+
+      <br /> 
+
+      <h4>Enter Time Quantum for Round Robin (100ms-1000ms): </h4>
       <TimeSliceLength />
 
     </div>
