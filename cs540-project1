@@ -101,6 +101,10 @@ function RandomProcessGenerator({numOfProcesses}){
 
       <FirstInFirstOut processData = {tableData} />
 
+      <br />
+
+      <ShortestJobFirst processData = {tableData} />
+
     </div>
   );
 
@@ -180,7 +184,6 @@ function TimeSliceLength(){
 function FirstInFirstOut({processData}){
 
   const [barData, setBarData] = useState([]); // initial values are empty
-  //const [data, setData] = useState([]);
 
   // function that creates bar data list
   function generateBarData(){
@@ -201,7 +204,6 @@ function FirstInFirstOut({processData}){
 
   };
 
-  // only generate numbers if numOfProcesses is greater than 0
   React.useEffect(() => {
 
     generateBarData();
@@ -247,7 +249,107 @@ function FirstInFirstOut({processData}){
         options={options} />
 
     </div>
+  );
 
+};
+
+
+// SJF algorithm
+function ShortestJobFirst({processData}){
+
+  // sort processes from shortest to longest
+  function sortProcesses(processList){
+
+    for(let i = 0; i < processList.length; i++){
+
+      let key = processList[i]['length'];
+      let keyName = processList[i]['name'];
+      let j = i - 1;
+
+      while (j >= 0 && processList[j]['length'] > key){
+
+        processList[j + 1]['length'] = processList[j]['length'];
+        processList[j + 1]['name'] = processList[j]['name'];
+        j--;
+
+      }
+
+      processList[j + 1]['length'] = key;
+      processList[j + 1]['name'] = keyName;
+
+    };
+
+    return processList;
+
+  };
+
+  const [barData, setBarData] = useState([]); // initial values are empty
+
+  // function that creates bar data list
+  function generateBarData(){
+
+    const chartColors = [{A: 'pink', B: 'salmon', C: 'sandybrown', D: 'palegoldenrod', E: 'lightgreen', F: 'mediumseagreen', G: 'turquoise', H: 'royalblue', I: 'rebeccapurple'}];
+    const chartData = [];
+    for(let i = 0; i < processData.length; i++){
+  
+      chartData.push({
+        label: 'Process ' + processData[i]['name'],
+        data: [processData[i]['length']],
+        backgroundColor: chartColors[0][processData[i]['name']],
+        barThickness: 30,
+      });
+
+    };
+    setBarData(chartData); // update state of barData
+
+  };  
+
+  React.useEffect(() => {
+
+    processData = sortProcesses(processData);
+    generateBarData();
+   
+  }, [processData]); // re-run whenever processData changes
+  
+  // options for the stacked bar chart
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false, // allows chart to be resized freely
+    indexAxis: 'y', // makes the chart horizontal
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      tooltip: {
+        enabled: true,
+      },
+    },
+    scales: {
+      x: {
+        beginAtZero: true, // start X-axis from 0
+        stacked: true, // enable stacking on the X-axis (horizontal axis)
+        title: {
+          display: true,
+          text: 'Time (ms)', // add label "Time (ms)" to the x-axis
+        },
+
+      },
+      y: {
+        stacked: true, // enable stacking on the Y-axis (vertical axis)
+      },
+    },
+  };
+  
+  return (
+    <div style={{ width: '75%', height: '150px'}}>
+
+      <h2>SJF Algorithm</h2>
+      <Bar data={
+        {labels: ['SJF'],
+        datasets: barData}} 
+        options={options} />
+
+    </div>
   );
 
 };
