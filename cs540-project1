@@ -1,75 +1,25 @@
 import './App.css'
-import React, { useState } from 'react';
-
-
-// generate random processes
-function RandomProcessGenerator({numOfProcesses}){
-
-  const [randomTimes, setRandomTimes] = useState([]); // initial values are empty
-
-  // function that generates a list of random times from 100ms to 1000ms
-  function generateRandomTime(){
-
-    const times = []; // initiallize list "times"
-    for(let i = 0; i < numOfProcesses; i++){
-      const time = Math.floor(Math.random() * (1000 - 100 + 1)) + 100; // generate random number from 100 to 1000
-      times.push(time);
-    }
-    setRandomTimes(times); // update state of randomTimes
-  }
-
-  // only generate numbers if numOfProcesses is greater than 0
-  React.useEffect(() => {
-    if (numOfProcesses > 0) {
-      generateRandomTime(); // generate the random numbers
-    }
-  }, [numOfProcesses]); // re-run whenever numOfProcesses changes
-
-  
-  const namesList = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
-  const tableData = [];
-  for(let i = 0; i < numOfProcesses; i++){
-    tableData.push({name: namesList[i], length: randomTimes[i]});
-  };
-
-
-  return (
-    <div>
-      <ProcessTable processData = {tableData} />
-    </div>
-  );
-
-}
-
-
-// create table of processes
-function ProcessTable({processData}){
-
-  return(
-    <div>
-      <h2>Process Information</h2>
-      <table border="1" cellPadding="10">
-        <thead>
-          <tr>
-            <th>Process</th>
-            {processData.map((process) => (
-              <td key={process.name}> {process.name} </td>
-          ))}
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <th>Process Length (ms)</th>
-            {processData.map((process) => (
-              <td key={process.name}> {process.length} </td>
-          ))}
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  );
-
-};
+import React, { useState, useEffect } from 'react';
+// import chart.js
+import { Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
+// register chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 
 // allow user to set number of processes
@@ -112,6 +62,81 @@ function NumberOfProcesses(){
 };
 
 
+// generate random processes
+function RandomProcessGenerator({numOfProcesses}){
+
+  const [randomTimes, setRandomTimes] = useState([]); // initial values are empty
+
+  // function that generates a list of random times from 100ms to 1000ms
+  function generateRandomTime(){
+
+    const times = []; // initiallize list "times"
+    for(let i = 0; i < numOfProcesses; i++){
+      const time = Math.floor(Math.random() * (1000 - 100 + 1)) + 100; // generate random number from 100 to 1000
+      times.push(time);
+    }
+    setRandomTimes(times); // update state of randomTimes
+  }
+
+  // only generate numbers if numOfProcesses is greater than 0
+  React.useEffect(() => {
+    if (numOfProcesses > 0) {
+      generateRandomTime(); // generate the random numbers
+    }
+  }, [numOfProcesses]); // re-run whenever numOfProcesses changes
+
+  
+  const namesList = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
+  const tableData = [];
+  for(let i = 0; i < numOfProcesses; i++){
+    tableData.push({name: namesList[i], length: randomTimes[i]});
+  };
+
+
+  return (
+    <div>
+      <ProcessTable processData = {tableData} />
+
+      <br />
+
+      <FirstInFirstOut processData = {tableData} />
+
+    </div>
+  );
+
+};
+
+
+// create table of processes
+function ProcessTable({processData}){
+
+  return(
+    <div>
+      <h2>Process Information</h2>
+      <table border="1" cellPadding="10">
+        <thead>
+          <tr>
+            <th>Process</th>
+            {processData.map((process) => (
+              <td key={process.name}> {process.name} </td>
+          ))}
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>Process Length (ms)</th>
+            {processData.map((process) => (
+              <td key={process.name}> {process.length} </td>
+          ))}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+
+};
+
+
 // allow user to set length of time slice (for round robin)
 function TimeSliceLength(){
 
@@ -148,11 +173,83 @@ function TimeSliceLength(){
     </form>
   );
 
-}
+};
 
 
+// FIFO algorithm
+function FirstInFirstOut({processData}){
 
+  const [barData, setBarData] = useState([]); // initial values are empty
+  //const [data, setData] = useState([]);
 
+  // function that creates bar data list
+  function generateBarData(){
+
+    const chartColors = ['pink', 'salmon', 'sandybrown', 'palegoldenrod', 'lightgreen', 'mediumseagreen', 'turquoise', 'royalblue', 'rebeccapurple'];
+    const chartData = [];
+    for(let i = 0; i < processData.length; i++){
+  
+      chartData.push({
+        label: 'Process ' + processData[i]['name'],
+        data: [processData[i]['length']],
+        backgroundColor: chartColors[i],
+        barThickness: 20,
+      });
+
+    };
+    setBarData(chartData); // update state of barData
+
+  };
+
+  // only generate numbers if numOfProcesses is greater than 0
+  React.useEffect(() => {
+
+    generateBarData();
+      
+  }, [processData]); // re-run whenever processData changes
+  
+  // options for the stacked bar chart
+  const options = {
+    responsive: true,
+    indexAxis: 'y', // makes the chart horizontal
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      tooltip: {
+        enabled: true,
+      },
+    },
+    scales: {
+      x: {
+        beginAtZero: true, // start X-axis from 0
+        stacked: true, // enable stacking on the X-axis (horizontal axis)
+        title: {
+          display: true,
+          text: 'Time (ms)', // add label "Time (ms)" to the x-axis
+        },
+
+      },
+      y: {
+        stacked: true, // enable stacking on the Y-axis (vertical axis)
+      },
+    },
+  };
+  
+  return (
+    <div style={{ height: '150px'}}>
+
+      <h2>FIFO Algorithm</h2>
+      <Bar data={
+        {labels: ['FIFO'],
+        datasets: barData
+      }} options={options} />
+
+    </div>
+
+  );
+
+};
 
 
 export default function MyApp() {
@@ -160,19 +257,18 @@ export default function MyApp() {
   return (
     <div>
 
-      <h1> Welcome to the Scheduling Algorithm Simulator</h1>
+      <h1> Welcome to the Scheduling Algorithm Simulator 😃🔫</h1>
 
       <h4> Enter Number of Processes (1-9): </h4>
       <NumberOfProcesses />
 
       <br /> 
 
-      <h4>Enter Time Quantum for Round Robin (100ms-1000ms): </h4>
+      <h4>Enter Time Quantum for Round Robin (1ms-100ms): </h4>
       <TimeSliceLength />
 
 
     </div>
   );
   
-
-}
+};
