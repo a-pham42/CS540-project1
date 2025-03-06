@@ -193,7 +193,7 @@ function FirstInFirstOut({processData}){
         label: 'Process ' + processData[i]['name'],
         data: [processData[i]['length']],
         backgroundColor: chartColors[i],
-        barThickness: 20,
+        barThickness: 30,
       });
 
     };
@@ -211,6 +211,7 @@ function FirstInFirstOut({processData}){
   // options for the stacked bar chart
   const options = {
     responsive: true,
+    maintainAspectRatio: false, // allows chart to be resized freely
     indexAxis: 'y', // makes the chart horizontal
     plugins: {
       legend: {
@@ -237,13 +238,13 @@ function FirstInFirstOut({processData}){
   };
   
   return (
-    <div style={{ height: '150px'}}>
+    <div style={{ width: '75%', height: '150px'}}>
 
       <h2>FIFO Algorithm</h2>
       <Bar data={
         {labels: ['FIFO'],
-        datasets: barData
-      }} options={options} />
+        datasets: barData}} 
+        options={options} />
 
     </div>
 
@@ -257,7 +258,7 @@ export default function MyApp() {
   return (
     <div>
 
-      <h1> Welcome to the Scheduling Algorithm Simulator 😃🔫</h1>
+      <h1> Welcome to the Scheduling Algorithm Simulator </h1>
 
       <h4> Enter Number of Processes (1-9): </h4>
       <NumberOfProcesses />
