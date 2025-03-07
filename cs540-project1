@@ -120,30 +120,41 @@ function ProcessTable({ processData }) {
 
 
 // allow user to set length of time quantum (for round robin)
-function TimeSliceLength() {
-  const [numberInput, setNumberInput] = useState(''); // initial value is empty
+function TimeQuantumLength() {
+  const [value, setValue] = useState(50); // initial value is 50
 
-  // handle changes in the input field
-  function handleInputChange(event) {
-    const value = parseInt(event.target.value, 10); // convert user input into an integer
-    if (!isNaN(value) && value >= 1 && value <= 100) { // only update numberInput if the user entered a valid input
-      setNumberInput(value);
-    } else if (event.target.value === '') { // allow empty input if user clears input
-      setNumberInput('');
-    }
-  }
+  // handle the change event when the slider is adjusted
+  const handleSliderChange = (event) => {
+    setValue(Number(event.target.value)); // convert the value to a number
+  };
+
+  // label positions based on slider min/max values
+  const labelPositions = [50, 60, 70, 80, 90, 100];
 
   return (
-    <form>
-      <input
-        type="text"
-        placeholder="Enter number..."
-        value={numberInput}
-        onChange={handleInputChange}
-      />
-      <p> Time Slice Length (ms): {numberInput}</p>
-    </form>
-  );
+    <div>
+      <div style={{ width: '20%', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+        <input
+          type="range"
+          min="50"        // min value
+          max="100"       // max value
+          step="10"       // step value (increments of 10)
+          value={value}   // current slider value
+          onChange={handleSliderChange}  // event handler for slider change
+          style={{
+            width: '100%', // make the slider take up 100% of the container's width (which is 20% of the screen)
+            display: 'block',
+          }}
+        />
+        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+          {labelPositions.map((label) => (
+            <span key={label}>{label}</span>
+          ))}
+        </div>
+      </div>
+      <p> Time Quantum Length: {value} ms</p>
+    </div>
+  );  
 }
 
 
@@ -442,11 +453,13 @@ export default function MyApp() {
   return (
     <div>
       <h1>Welcome to the Scheduling Algorithm Simulator</h1>
-      <h4>Enter Number of Processes (1-9):</h4>
+      <h2>Enter Number of Processes (1-9):</h2>
       <NumberOfProcesses />
       <br />
-      <h4>Enter Time Quantum for Round Robin (1ms-100ms):</h4>
-      <TimeSliceLength />
+      <h2>Enter Time Quantum for Round Robin:</h2>
+      <TimeQuantumLength />
+      <br />
+
     </div>
   );
 }
