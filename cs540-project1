@@ -84,6 +84,8 @@ function RandomProcessGenerator({ numOfProcesses }) {
       <FirstInFirstOut processData={tableData} />
       <br />
       <ShortestJobFirst processData={tableData} />
+      <br />
+      <ShortestTimeToCompletion processData={tableData} />
     </div>
   );
 }
@@ -239,6 +241,70 @@ function ShortestJobFirst({ processData }) {
 }
 
 
+// STCF algorithm
+function ShortestTimeToCompletion({ processData }) {
+  const [barData, setBarData] = useState([]); // initial values are empty
+
+  useEffect(() => {
+
+    const processList = [...processData];
+    let currentList = [];
+    let STCFList = [];
+
+    // processes are still being received
+    for (let i = 0; i < processList.length; i++){
+      currentList.push({name: processList[i]['name'], length: processList[i]['length']}); // receive next process
+      currentList.sort((a, b) => a.length - b.length); // sort list from shortest to longest process
+      STCFList.push({name: currentList[0]['name'], length: 50}); // simulate running shortest process for 50ms
+      currentList[0]['length'] = currentList[0]['length'] - 50; // subtract 50ms from shortest process
+    };
+    // all processes have been received
+    currentList.sort((a, b) => a.length - b.length);
+    for (let i = 0; i < processList.length; i++){
+      STCFList.push({name: currentList[i]['name'], length: currentList[i]['length']});
+    };
+    
+    // generate dataset for stacked bar chart
+    const chartData = STCFList.map((process) => ({
+      label: 'Process ' + process.name,
+      data: [process.length],
+      backgroundColor: getColor(process.name),
+      barThickness: 30,
+    }));
+    setBarData(chartData);
+  }, [processData]); // re-run whenever processData changes
+
+  // options for stacked bar chart
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false, // allows chart to be resized freely
+    indexAxis: 'y', // makes the chart horizontal
+    plugins: {
+      legend: { position: 'top' },
+      tooltip: { enabled: true },
+    },
+    scales: {
+      x: {
+        beginAtZero: true, // start x-axis form 0
+        stacked: true, // enable stacking on the x-axis (horizontal axis)
+        title: {
+          display: true,
+          text: 'Time (ms)',
+        },
+      },
+      y: { stacked: true }, // enable stacking on the y-axis (vertical axis)
+    },
+  };
+  
+  return (
+    <div style={{ width: '75%', height: '150px' }}>
+      <h2>STCF Algorithm</h2>
+      <Bar data={{ labels: ['STCF'], datasets: barData }} options={options} />
+    </div>
+  );
+}
+
+
 // helper function to return color based on process name
 function getColor(name) {
   const colors = {
@@ -267,7 +333,3 @@ export default function MyApp() {
     </div>
   );
 }
-
-
-
-
