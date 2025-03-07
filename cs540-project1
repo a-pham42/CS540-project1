@@ -443,7 +443,7 @@ function getColor(name) {
     F: 'mediumseagreen',
     G: 'turquoise',
     H: 'royalblue',
-    I: 'rebeccapurple',
+    I: 'mediumpurple',
   };
   return colors[name] || 'gray';
 }
