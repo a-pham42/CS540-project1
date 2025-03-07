@@ -1,7 +1,6 @@
-import './App.css'
-import React, { useState, useEffect } from 'react';
-// import chart.js
-import { Bar } from 'react-chartjs-2';
+import './App.css';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Bar } from 'react-chartjs-2';  // import chart.js
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -11,8 +10,8 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
-// register chart.js components
-ChartJS.register(
+
+ChartJS.register( // register chart.js components
   CategoryScale,
   LinearScale,
   BarElement,
@@ -21,50 +20,35 @@ ChartJS.register(
   Legend
 );
 
-
-// allow user to set number of processes
-function NumberOfProcesses(){
-
+// allow user to set the number of processes (1-9)
+function NumberOfProcesses() {
   const [numberInput, setNumberInput] = useState(''); // initial value is empty
 
   // handle changes in the input field
   function handleInputChange(event) {
-
-    // convert the user input into an integer
-    const value = parseInt(event.target.value, 10);
-
-    // only update the number input if the user entered a valid input
-    if (!isNaN(value) && value >= 1 && value <= 9){
+    const value = parseInt(event.target.value, 10); // convert user input into an integer
+    if (!isNaN(value) && value >= 1 && value <= 9) { // only update state of numberInput if user entered a valid input
       setNumberInput(value);
-    }
-    // allow empty input if user clears input
-    else if (event.target.value === ""){
+    } else if (event.target.value === '') { // allow empty input if user clears input
       setNumberInput('');
     }
-
-  };
+  }
 
   return (
     <form>
-
-      <input 
-      type="text" 
-      placeholder="Enter number..."
-      value={numberInput}
-      onChange={handleInputChange}
+      <input
+        type="text"
+        placeholder="Enter number..."
+        value={numberInput}
+        onChange={handleInputChange}
       />
-
       <RandomProcessGenerator numOfProcesses={numberInput} />
-
     </form>
   );
+}
 
-};
-
-
-// generate random processes
-function RandomProcessGenerator({numOfProcesses}){
-
+// generate random processes & run the scheduling algorithms
+function RandomProcessGenerator({ numOfProcesses }) {
   const [randomTimes, setRandomTimes] = useState([]); // initial values are empty
 
   // function that generates a list of random times from 100ms to 1000ms
@@ -78,43 +62,36 @@ function RandomProcessGenerator({numOfProcesses}){
     setRandomTimes(times); // update state of randomTimes
   }
 
-  // only generate numbers if numOfProcesses is greater than 0
-  React.useEffect(() => {
+  // only generate times if numOfProcesses > 0
+  useEffect(() => {
     if (numOfProcesses > 0) {
-      generateRandomTime(); // generate the random numbers
+      generateRandomTime(); // generate random times
     }
   }, [numOfProcesses]); // re-run whenever numOfProcesses changes
 
-  
   const namesList = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
-  const tableData = [];
-  for(let i = 0; i < numOfProcesses; i++){
-    tableData.push({name: namesList[i], length: randomTimes[i]});
-  };
-
+  const tableData = useMemo(() => {
+    return randomTimes.map((time, index) => ({
+      name: namesList[index],
+      length: time,
+    }));
+  }, [randomTimes]);
 
   return (
     <div>
-      <ProcessTable processData = {tableData} />
-
+      <ProcessTable processData={tableData} />
       <br />
-
-      <FirstInFirstOut processData = {tableData} />
-
+      <FirstInFirstOut processData={tableData} />
       <br />
-
-      <ShortestJobFirst processData = {tableData} />
-
+      <ShortestJobFirst processData={tableData} />
     </div>
   );
-
-};
+}
 
 
 // create table of processes
-function ProcessTable({processData}){
-
-  return(
+function ProcessTable({ processData }) {
+  return (
     <div>
       <h2>Process Information</h2>
       <table border="1" cellPadding="10">
@@ -122,256 +99,175 @@ function ProcessTable({processData}){
           <tr>
             <th>Process</th>
             {processData.map((process) => (
-              <td key={process.name}> {process.name} </td>
-          ))}
+              <td key={process.name}>{process.name}</td>
+            ))}
           </tr>
         </thead>
         <tbody>
           <tr>
             <th>Process Length (ms)</th>
             {processData.map((process) => (
-              <td key={process.name}> {process.length} </td>
-          ))}
+              <td key={process.name}>{process.length}</td>
+            ))}
           </tr>
         </tbody>
       </table>
     </div>
   );
+}
 
-};
 
-
-// allow user to set length of time slice (for round robin)
-function TimeSliceLength(){
-
+// allow user to set length of time quantum (for round robin)
+function TimeSliceLength() {
   const [numberInput, setNumberInput] = useState(''); // initial value is empty
 
   // handle changes in the input field
   function handleInputChange(event) {
-
-    // convert the user input into an integer
-    const value = parseInt(event.target.value, 10);
-
-    // only update the number input if the user entered a valid input
-    if (!isNaN(value) && value >= 1 && value <= 100){
+    const value = parseInt(event.target.value, 10); // convert user input into an integer
+    if (!isNaN(value) && value >= 1 && value <= 100) { // only update numberInput if the user entered a valid input
       setNumberInput(value);
-    }
-    // allow empty input if user clears input
-    else if (event.target.value === ""){
+    } else if (event.target.value === '') { // allow empty input if user clears input
       setNumberInput('');
     }
   }
 
   return (
     <form>
-
-      <input 
-      type="text" 
-      placeholder="Enter number..."
-      value={numberInput}
-      onChange={handleInputChange}
+      <input
+        type="text"
+        placeholder="Enter number..."
+        value={numberInput}
+        onChange={handleInputChange}
       />
-
       <p> Time Slice Length (ms): {numberInput}</p>
-
     </form>
   );
-
-};
+}
 
 
 // FIFO algorithm
-function FirstInFirstOut({processData}){
-
+function FirstInFirstOut({ processData }) {
   const [barData, setBarData] = useState([]); // initial values are empty
 
-  // function that creates bar data list
-  function generateBarData(){
-
-    const chartColors = ['pink', 'salmon', 'sandybrown', 'palegoldenrod', 'lightgreen', 'mediumseagreen', 'turquoise', 'royalblue', 'rebeccapurple'];
-    const chartData = [];
-    for(let i = 0; i < processData.length; i++){
-  
-      chartData.push({
-        label: 'Process ' + processData[i]['name'],
-        data: [processData[i]['length']],
-        backgroundColor: chartColors[i],
-        barThickness: 30,
-      });
-
-    };
-    setBarData(chartData); // update state of barData
-
-  };
-
-  React.useEffect(() => {
-
-    generateBarData();
-      
+  // generate dataset for stacked bar chart
+  useEffect(() => {
+    const chartData = processData.map((process) => ({
+      label: 'Process ' + process.name,
+      data: [process.length],
+      backgroundColor: getColor(process.name),
+      barThickness: 30,
+    }));
+    setBarData(chartData);
   }, [processData]); // re-run whenever processData changes
-  
+
   // options for the stacked bar chart
   const options = {
     responsive: true,
     maintainAspectRatio: false, // allows chart to be resized freely
     indexAxis: 'y', // makes the chart horizontal
     plugins: {
-      legend: {
-        position: 'top',
-      },
-      tooltip: {
-        enabled: true,
-      },
+      legend: { position: 'top' },
+      tooltip: { enabled: true },
     },
     scales: {
       x: {
-        beginAtZero: true, // start X-axis from 0
-        stacked: true, // enable stacking on the X-axis (horizontal axis)
+        beginAtZero: true, // start x-axis from 0
+        stacked: true, // enable stacking on the x-axis (horizontal axis)
         title: {
           display: true,
-          text: 'Time (ms)', // add label "Time (ms)" to the x-axis
+          text: 'Time (ms)',
         },
-
       },
-      y: {
-        stacked: true, // enable stacking on the Y-axis (vertical axis)
-      },
+      y: { stacked: true }, // enable stacking on the y-axis (verical axis)
     },
   };
-  
+
   return (
-    <div style={{ width: '75%', height: '150px'}}>
-
+    <div style={{ width: '75%', height: '150px' }}>
       <h2>FIFO Algorithm</h2>
-      <Bar data={
-        {labels: ['FIFO'],
-        datasets: barData}} 
-        options={options} />
-
+      <Bar data={{ labels: ['FIFO'], datasets: barData }} options={options} />
     </div>
   );
-
-};
+}
 
 
 // SJF algorithm
-function ShortestJobFirst({processData}){
-
-  // sort processes from shortest to longest
-  function sortProcesses(processList){
-
-    for(let i = 0; i < processList.length; i++){
-
-      let key = processList[i]['length'];
-      let keyName = processList[i]['name'];
-      let j = i - 1;
-
-      while (j >= 0 && processList[j]['length'] > key){
-
-        processList[j + 1]['length'] = processList[j]['length'];
-        processList[j + 1]['name'] = processList[j]['name'];
-        j--;
-
-      }
-
-      processList[j + 1]['length'] = key;
-      processList[j + 1]['name'] = keyName;
-
-    };
-
-    return processList;
-
-  };
-
+function ShortestJobFirst({ processData }) {
   const [barData, setBarData] = useState([]); // initial values are empty
 
-  // function that creates bar data list
-  function generateBarData(){
-
-    const chartColors = [{A: 'pink', B: 'salmon', C: 'sandybrown', D: 'palegoldenrod', E: 'lightgreen', F: 'mediumseagreen', G: 'turquoise', H: 'royalblue', I: 'rebeccapurple'}];
-    const chartData = [];
-    for(let i = 0; i < processData.length; i++){
-  
-      chartData.push({
-        label: 'Process ' + processData[i]['name'],
-        data: [processData[i]['length']],
-        backgroundColor: chartColors[0][processData[i]['name']],
-        barThickness: 30,
-      });
-
-    };
-    setBarData(chartData); // update state of barData
-
-  };  
-
-  React.useEffect(() => {
-
-    processData = sortProcesses(processData);
-    generateBarData();
-   
+  useEffect(() => {
+    // sort processes from shortest to longest
+    const sortedData = [...processData].sort((a, b) => a.length - b.length);
+    // generate dataset for stacked bar chart
+    const chartData = sortedData.map((process) => ({
+      label: 'Process ' + process.name,
+      data: [process.length],
+      backgroundColor: getColor(process.name),
+      barThickness: 30,
+    }));
+    setBarData(chartData);
   }, [processData]); // re-run whenever processData changes
-  
-  // options for the stacked bar chart
+
+  // options for stacked bar chart
   const options = {
     responsive: true,
     maintainAspectRatio: false, // allows chart to be resized freely
     indexAxis: 'y', // makes the chart horizontal
     plugins: {
-      legend: {
-        position: 'top',
-      },
-      tooltip: {
-        enabled: true,
-      },
+      legend: { position: 'top' },
+      tooltip: { enabled: true },
     },
     scales: {
       x: {
-        beginAtZero: true, // start X-axis from 0
-        stacked: true, // enable stacking on the X-axis (horizontal axis)
+        beginAtZero: true, // start x-axis form 0
+        stacked: true, // enable stacking on the x-axis (horizontal axis)
         title: {
           display: true,
-          text: 'Time (ms)', // add label "Time (ms)" to the x-axis
+          text: 'Time (ms)',
         },
-
       },
-      y: {
-        stacked: true, // enable stacking on the Y-axis (vertical axis)
-      },
+      y: { stacked: true }, // enable stacking on the y-axis (vertical axis)
     },
   };
-  
+
   return (
-    <div style={{ width: '75%', height: '150px'}}>
-
+    <div style={{ width: '75%', height: '150px' }}>
       <h2>SJF Algorithm</h2>
-      <Bar data={
-        {labels: ['SJF'],
-        datasets: barData}} 
-        options={options} />
-
+      <Bar data={{ labels: ['SJF'], datasets: barData }} options={options} />
     </div>
   );
+}
 
-};
 
+// helper function to return color based on process name
+function getColor(name) {
+  const colors = {
+    A: 'pink',
+    B: 'salmon',
+    C: 'sandybrown',
+    D: 'palegoldenrod',
+    E: 'lightgreen',
+    F: 'mediumseagreen',
+    G: 'turquoise',
+    H: 'royalblue',
+    I: 'rebeccapurple',
+  };
+  return colors[name] || 'gray';
+}
 
 export default function MyApp() {
-
   return (
     <div>
-
-      <h1> Welcome to the Scheduling Algorithm Simulator </h1>
-
-      <h4> Enter Number of Processes (1-9): </h4>
+      <h1>Welcome to the Scheduling Algorithm Simulator</h1>
+      <h4>Enter Number of Processes (1-9):</h4>
       <NumberOfProcesses />
-
-      <br /> 
-
-      <h4>Enter Time Quantum for Round Robin (1ms-100ms): </h4>
+      <br />
+      <h4>Enter Time Quantum for Round Robin (1ms-100ms):</h4>
       <TimeSliceLength />
-
-
     </div>
   );
-  
-};
+}
+
+
+
+
