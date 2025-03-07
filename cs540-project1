@@ -158,6 +158,8 @@ function FirstInFirstOut({ processData }) {
       data: [process.length],
       backgroundColor: getColor(process.name),
       barThickness: 30,
+      borderColor: 'darkgray',
+      borderWidth: 2,
     }));
     setBarData(chartData);
   }, [processData]); // re-run whenever processData changes
@@ -168,7 +170,37 @@ function FirstInFirstOut({ processData }) {
     maintainAspectRatio: false, // allows chart to be resized freely
     indexAxis: 'y', // makes the chart horizontal
     plugins: {
-      legend: { position: 'top' },
+      legend: {
+        position: 'top',
+        labels: {
+          // custom legend order
+          generateLabels: (chart) => {
+            const originalLabels = chart.data.datasets.map((dataset, index) => ({
+              text: dataset.label,
+              fillStyle: dataset.backgroundColor,
+              datasetIndex: index,
+            }));
+  
+            // define the custom order based on the process labels
+            const customOrder = [
+              'Process A',
+              'Process B',
+              'Process C',
+              'Process D',
+              'Process E',
+              'Process F',
+              'Process G',
+              'Process H',
+              'Process I',
+            ];
+  
+            // sort the labels according to the custom order
+            return originalLabels.sort((a, b) => {
+              return customOrder.indexOf(a.text) - customOrder.indexOf(b.text);
+            });
+          },
+        },
+      },
       tooltip: { enabled: true },
     },
     scales: {
@@ -206,6 +238,8 @@ function ShortestJobFirst({ processData }) {
       data: [process.length],
       backgroundColor: getColor(process.name),
       barThickness: 30,
+      borderColor: 'darkgray',
+      borderWidth: 2,
     }));
     setBarData(chartData);
   }, [processData]); // re-run whenever processData changes
@@ -216,7 +250,37 @@ function ShortestJobFirst({ processData }) {
     maintainAspectRatio: false, // allows chart to be resized freely
     indexAxis: 'y', // makes the chart horizontal
     plugins: {
-      legend: { position: 'top' },
+      legend: {
+        position: 'top',
+        labels: {
+          // custom legend order
+          generateLabels: (chart) => {
+            const originalLabels = chart.data.datasets.map((dataset, index) => ({
+              text: dataset.label,
+              fillStyle: dataset.backgroundColor,
+              datasetIndex: index,
+            }));
+  
+            // define the custom order based on the process labels
+            const customOrder = [
+              'Process A',
+              'Process B',
+              'Process C',
+              'Process D',
+              'Process E',
+              'Process F',
+              'Process G',
+              'Process H',
+              'Process I',
+            ];
+  
+            // sort the labels according to the custom order
+            return originalLabels.sort((a, b) => {
+              return customOrder.indexOf(a.text) - customOrder.indexOf(b.text);
+            });
+          },
+        },
+      },
       tooltip: { enabled: true },
     },
     scales: {
@@ -251,12 +315,21 @@ function ShortestTimeToCompletion({ processData }) {
     let currentList = [];
     let STCFList = [];
 
+    let index = 0;
+
     // processes are still being received
     for (let i = 0; i < processList.length; i++){
       currentList.push({name: processList[i]['name'], length: processList[i]['length']}); // receive next process
       currentList.sort((a, b) => a.length - b.length); // sort list from shortest to longest process
-      STCFList.push({name: currentList[0]['name'], length: 50}); // simulate running shortest process for 50ms
-      currentList[0]['length'] = currentList[0]['length'] - 50; // subtract 50ms from shortest process
+
+      if (currentList[index]['length'] >= 50){ // if the shortest process is at least 50ms
+        STCFList.push({name: currentList[index]['name'], length: 50}); // simulate running shortest process for 50ms
+        currentList[index]['length'] = currentList[index]['length'] - 50; // subtract 50ms from shortest process
+      } else { // if the shortest process is less than 50ms
+        STCFList.push({name: currentList[index]['name'], length: currentList[index]['length']}); // simulate running shortest process
+        currentList[index]['length'] = 0; // process has 0ms
+        index++; // increment index so the process isn't counted again
+      }
     };
     // all processes have been received
     currentList.sort((a, b) => a.length - b.length);
@@ -270,6 +343,8 @@ function ShortestTimeToCompletion({ processData }) {
       data: [process.length],
       backgroundColor: getColor(process.name),
       barThickness: 30,
+      borderColor: 'darkgray',
+      borderWidth: 2,
     }));
     setBarData(chartData);
   }, [processData]); // re-run whenever processData changes
@@ -280,7 +355,46 @@ function ShortestTimeToCompletion({ processData }) {
     maintainAspectRatio: false, // allows chart to be resized freely
     indexAxis: 'y', // makes the chart horizontal
     plugins: {
-      legend: { position: 'top' },
+      legend: {
+        position: 'top',
+        labels: {
+          // custom legend order
+          generateLabels: (chart) => {
+            const originalLabels = chart.data.datasets.map((dataset, index) => ({
+              text: dataset.label,
+              fillStyle: dataset.backgroundColor,
+              datasetIndex: index,
+            }));
+  
+            // remove duplicate labels based on label and color
+            const uniqueLabels = [];
+            originalLabels.forEach((label) => {
+              // only add label if it's not already added to the uniqueLabels array
+              if (!uniqueLabels.some((unique) => unique.text === label.text && unique.fillStyle === label.fillStyle)) {
+                uniqueLabels.push(label);
+              }
+            });
+
+            // define the custom order based on the process labels
+            const customOrder = [
+              'Process A',
+              'Process B',
+              'Process C',
+              'Process D',
+              'Process E',
+              'Process F',
+              'Process G',
+              'Process H',
+              'Process I',
+            ];
+  
+            // sort the labels according to the custom order
+            return uniqueLabels.sort((a, b) => {
+              return customOrder.indexOf(a.text) - customOrder.indexOf(b.text);
+            });
+          },
+        },
+      },
       tooltip: { enabled: true },
     },
     scales: {
@@ -295,6 +409,8 @@ function ShortestTimeToCompletion({ processData }) {
       y: { stacked: true }, // enable stacking on the y-axis (vertical axis)
     },
   };
+
+  //return <PrintArray2 array={barData} />;
   
   return (
     <div style={{ width: '75%', height: '150px' }}>
@@ -320,6 +436,7 @@ function getColor(name) {
   };
   return colors[name] || 'gray';
 }
+
 
 export default function MyApp() {
   return (
