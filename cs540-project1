@@ -54,9 +54,9 @@ function RandomProcessGenerator({ numOfProcesses }) {
   // function that generates a list of random times from 100ms to 1000ms
   function generateRandomTime(){
 
-    const times = []; // initiallize list "times"
+    let times = []; // initiallize list "times"
     for(let i = 0; i < numOfProcesses; i++){
-      const time = Math.floor(Math.random() * (1000 - 100 + 1)) + 100; // generate random number from 100 to 1000
+      let time = Math.floor(Math.random() * (1000 - 100 + 1)) + 100; // generate random number from 100 to 1000
       times.push(time);
     }
     setRandomTimes(times); // update state of randomTimes
@@ -438,7 +438,7 @@ function RoundRobin({ processData, timeQuantum }) {
 
   useEffect(() => {
 
-    let processList = [...processData];
+    let processList = JSON.parse(JSON.stringify(processData)); // create deep copy of processData
     let RRList = [];
     
     let indexList = processList.map((_, index) => index); // create list of indexes of processList
