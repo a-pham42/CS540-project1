@@ -50,6 +50,7 @@ function NumberOfProcesses() {
 // generate random processes & run the scheduling algorithms
 function RandomProcessGenerator({ numOfProcesses }) {
   const [randomTimes, setRandomTimes] = useState([]); // initial values are empty
+  const [timeQuantum, setTimeQuantum] = useState(50); // add state for timeQuantum, initial value is 50ms
 
   // function that generates a list of random times from 100ms to 1000ms
   function generateRandomTime(){
@@ -79,6 +80,9 @@ function RandomProcessGenerator({ numOfProcesses }) {
 
   return (
     <div>
+      <h2>Enter Time Quantum for Round Robin: </h2>
+      <TimeQuantumLength setTimeQuantum={setTimeQuantum} />
+      <br />
       <ProcessTable processData={tableData} />
       <br />
       <FirstInFirstOut processData={tableData} />
@@ -87,7 +91,7 @@ function RandomProcessGenerator({ numOfProcesses }) {
       <br />
       <ShortestTimeToCompletion processData={tableData} />
       <br />
-      <RoundRobin processData={tableData} timeQuantum={50} />
+      <RoundRobin processData={tableData} timeQuantum={timeQuantum} />
     </div>
   );
 }
@@ -122,12 +126,14 @@ function ProcessTable({ processData }) {
 
 
 // allow user to set length of time quantum (for round robin)
-function TimeQuantumLength() {
+function TimeQuantumLength({ setTimeQuantum }) {
   const [value, setValue] = useState(50); // initial value is 50
 
   // handle the change event when the slider is adjusted
   const handleSliderChange = (event) => {
-    setValue(Number(event.target.value)); // convert the value to a number
+    const newValue = Number(event.target.value); // convert the value to a number
+    setValue(newValue); // update local state for display
+    setTimeQuantum(newValue); // update the parent state (RandomProcessGenerator)
   };
 
   // label positions based on slider min/max values
@@ -469,7 +475,7 @@ function RoundRobin({ processData, timeQuantum }) {
       borderWidth: 2,
     }));
     setBarData(chartData);
-  }, [processData]); // re-run whenever processData changes
+  }, [processData, timeQuantum]); // re-run whenever processData changes
 
   // options for stacked bar chart
   const options = {
@@ -565,10 +571,6 @@ export default function MyApp() {
       <h2>Enter Number of Processes (1-9):</h2>
       <NumberOfProcesses />
       <br />
-      <h2>Enter Time Quantum for Round Robin:</h2>
-      <TimeQuantumLength />
-      <br />
-
     </div>
   );
 }
