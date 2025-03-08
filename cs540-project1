@@ -86,6 +86,8 @@ function RandomProcessGenerator({ numOfProcesses }) {
       <ShortestJobFirst processData={tableData} />
       <br />
       <ShortestTimeToCompletion processData={tableData} />
+      <br />
+      <RoundRobin processData={tableData} timeQuantum={50} />
     </div>
   );
 }
@@ -420,13 +422,120 @@ function ShortestTimeToCompletion({ processData }) {
       y: { stacked: true }, // enable stacking on the y-axis (vertical axis)
     },
   };
-
-  //return <PrintArray2 array={barData} />;
   
   return (
     <div style={{ width: '75%', height: '150px' }}>
       <h2>STCF Algorithm</h2>
       <Bar data={{ labels: ['STCF'], datasets: barData }} options={options} />
+    </div>
+  );
+}
+
+
+// RR algorithm
+function RoundRobin({ processData, timeQuantum }) {
+  const [barData, setBarData] = useState([]); // initial values are empty
+
+  useEffect(() => {
+
+    let processList = [...processData];
+    let RRList = [];
+    
+    let indexList = processList.map((_, index) => index); // create list of indexes of processList
+    let indexPointer = 0; // pointer to current index in indexList
+
+    while (indexList.length > 0) {
+      let index = indexList[indexPointer]; // get the current process index
+      let currentProcess = processList[index]; // get the current process object
+
+      if (currentProcess['length'] >= timeQuantum) { // if current process is at least as long as timeQuantum
+        RRList.push({ name: currentProcess['name'], length: timeQuantum }); // simulate running the process for timeQuantum
+        processList[index]['length'] -= timeQuantum; // subtract timeQuantum from current process length
+        indexPointer = (indexPointer === (indexList.length - 1) ? 0 : indexPointer + 1); // update indexPointer
+      } else { // if current process is shorter than timeQuantum
+        RRList.push({ name: currentProcess['name'], length: currentProcess['length'] }); // simulate running the rest of the current process
+        indexList.splice(indexPointer, 1); // remove the process from the index list
+        indexPointer = (indexPointer === (indexList.length) ? 0 : indexPointer); // update indexPointer
+      }
+    };
+
+    // generate dataset for stacked bar chart
+    const chartData = RRList.map((process) => ({
+      label: 'Process ' + process.name,
+      data: [process.length],
+      backgroundColor: getColor(process.name),
+      barThickness: 30,
+      borderColor: 'darkgray',
+      borderWidth: 2,
+    }));
+    setBarData(chartData);
+  }, [processData]); // re-run whenever processData changes
+
+  // options for stacked bar chart
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false, // allows chart to be resized freely
+    indexAxis: 'y', // makes the chart horizontal
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          // custom legend order
+          generateLabels: (chart) => {
+            const originalLabels = chart.data.datasets.map((dataset, index) => ({
+              text: dataset.label,
+              fillStyle: dataset.backgroundColor,
+              datasetIndex: index,
+            }));
+  
+            // remove duplicate labels based on label and color
+            const uniqueLabels = [];
+            originalLabels.forEach((label) => {
+              // only add label if it's not already added to the uniqueLabels array
+              if (!uniqueLabels.some((unique) => unique.text === label.text && unique.fillStyle === label.fillStyle)) {
+                uniqueLabels.push(label);
+              }
+            });
+
+            // define the custom order based on the process labels
+            const customOrder = [
+              'Process A',
+              'Process B',
+              'Process C',
+              'Process D',
+              'Process E',
+              'Process F',
+              'Process G',
+              'Process H',
+              'Process I',
+            ];
+  
+            // sort the labels according to the custom order
+            return uniqueLabels.sort((a, b) => {
+              return customOrder.indexOf(a.text) - customOrder.indexOf(b.text);
+            });
+          },
+        },
+      },
+      tooltip: { enabled: true },
+    },
+    scales: {
+      x: {
+        beginAtZero: true, // start x-axis form 0
+        stacked: true, // enable stacking on the x-axis (horizontal axis)
+        title: {
+          display: true,
+          text: 'Time (ms)',
+        },
+      },
+      y: { stacked: true }, // enable stacking on the y-axis (vertical axis)
+    },
+  };
+
+  return (
+    <div style={{ width: '75%', height: '150px' }}>
+      <h2>RR Algorithm</h2>
+      <Bar data={{ labels: ['RR'], datasets: barData }} options={options} />
     </div>
   );
 }
