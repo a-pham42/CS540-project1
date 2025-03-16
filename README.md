@@ -20,3 +20,4 @@ The requirements of this project are:
   - The user should be able to run all algorithms and see the results side by side.
   - Use animation to show the progress of each algorithm.
   - Use `chart.js` to show the results as a bar chart.
+  - Save/download the results as a PDF file.
