@@ -1,5 +1,5 @@
 import './App.css';
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import html2canvas from "html2canvas"; // import html2canvas
 import { Bar } from 'react-chartjs-2';  // import chart.js
 import {
@@ -549,14 +549,6 @@ function RoundRobin({ processData, timeQuantum }) {
 }
 
 
-/*
-MLFQ Assumptions:
-- Top priority runs RR for time quantum of 50ms
-- Middle priority runs RR for time quantum of 100ms
-- Bottom priority runs RR for time quantum of 200ms
-- Priority boost when a process runs twice in each priority
-- Time allotment for each priority is (2 * time quantum of that priority)
-*/
 // MLFQ algorithm
 function MLFQ({ processData }){
   const [barData, setBarData] = useState([]); // initial values are empty
@@ -727,7 +719,7 @@ function SaveAsPDF() {
 
   return (
     <button onClick={handleSavePDF} style={{ margin: "10px", padding: "10px" }}>
-      Save as PDF
+      Save Webpage as PDF
     </button>
   );
 }
@@ -753,7 +745,38 @@ function getColor(name) {
 export default function MyApp() {
   return (
     <div>
-      <h1>Welcome to the Scheduling Algorithm Simulator</h1>
+      <h1>Welcome to the Process Scheduling Algorithm Simulator</h1>
+      <br />
+      <h2>How This Simulator Works:</h2>
+      <ul>
+        <li>Choose the number of processes to be run (from 1-9)</li>
+        <li>The runtime of each process is randomly generated (from 100ms-1000ms)</li>
+        <li>Choose the time quantum for the RR algorithm (from 50ms-100ms)</li>
+        <li>The final timeline of each process scheduling algorithm will be displayed below</li>
+        
+        <li>For <strong>STCF</strong>:
+            <ul class="indent">
+                <li>Assume processes arrive 50ms from each other</li>
+                <li>(Ex: Process A arrives at 0ms, Process B arrives at 50ms, etc.)</li>
+            </ul>
+        </li>
+        
+        <li>For <strong>MLFQ</strong>:
+            <ul class="indent">
+                <li>There are three queues: top, middle, and bottom</li>
+                <ul class="indent">
+                    <li>Top priority has a time quantum of 50ms</li>
+                    <li>Middle priority has a time quantum of 100ms</li>
+                    <li>Bottom priority has a time quantum of 200ms</li>
+                </ul>
+                <li>Time allotment for each priority is (2 × time quantum of that priority)</li>
+                <li>Processes get a priority boost when they run twice in each priority</li>
+            </ul>
+        </li>
+
+        <li>A PDF of all of the timeline results can be saved by pressing the button at the bottom of the webpage</li>
+      </ul>
+      <br />
       <h2>Enter Number of Processes (1-9):</h2>
       <NumberOfProcesses />
       <br />
