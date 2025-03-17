@@ -92,6 +92,8 @@ function RandomProcessGenerator({ numOfProcesses }) {
       <ShortestTimeToCompletion processData={tableData} />
       <br />
       <RoundRobin processData={tableData} timeQuantum={timeQuantum} />
+      <br />
+      <MLFQ processData={tableData} />
     </div>
   );
 }
@@ -542,6 +544,146 @@ function RoundRobin({ processData, timeQuantum }) {
     <div style={{ width: '75%', height: '150px' }}>
       <h2>RR Algorithm</h2>
       <Bar data={{ labels: ['RR'], datasets: barData }} options={options} />
+    </div>
+  );
+}
+
+
+/*
+MLFQ Assumptions:
+- Top priority runs RR for time quantum of 50ms
+- Middle priority runs RR for time quantum of 100ms
+- Bottom priority runs RR for time quantum of 200ms
+- Priority boost when a process runs twice in each priority
+- Time allotment for each priority is (2 * time quantum of that priority)
+*/
+// MLFQ algorithm
+function MLFQ({ processData }){
+  const [barData, setBarData] = useState([]); // initial values are empty
+
+  useEffect(() => {
+
+    let processList = JSON.parse(JSON.stringify(processData)); // create deep copy of processData
+    let MLFQList = [];
+    
+    let indexList = processList.map((_, index) => index); // create list of indexes of processList
+    let indexPointer = 0; // pointer to current index in indexList
+
+    const priority1time = 50;
+    const priority2time = 100;
+    const priority3time = 200;
+    let priorities = new Array(indexList.length).fill(1); // create list of priorities, where each process has an initial priority of 1
+    let timeAllotment = new Array(indexList.length).fill(2 * priority1time); // create list of time allotments, where each process has an initial allotment of 100ms
+
+    while (indexList.length > 0) {
+      let index = indexList[indexPointer]; // get the current process index
+      let currentProcess = processList[index]; // get the current process object
+      let currentPriority = priorities[index]; // get the current process priority
+
+      // set timeQuantum based on queue priority
+      let timeQuantum = 1000;
+      if (currentPriority === 1) {
+        timeQuantum = priority1time;
+      } else if (currentPriority === 2) {
+        timeQuantum = priority2time;
+      } else if (currentPriority === 3) {
+        timeQuantum = priority3time;
+      }
+
+      
+      if (currentProcess['length'] >= timeQuantum) { // if current process is at least as long as timeQuantum
+        MLFQList.push({ name: currentProcess['name'], length: timeQuantum}); // simulate running the process for timeQuantum
+        processList[index]['length'] -= timeQuantum; // subtract timeQuantum from current process length
+        timeAllotment[index] -= timeQuantum; // update time allotment 
+        indexPointer = (indexPointer === (indexList.length - 1) ? 0 : indexPointer + 1); // update indexPointer
+        if (timeAllotment[index] <= 0){ // check if process priority should be changed
+          timeAllotment[index] = (priorities[index] === (3) ? (2 * priority1time) : (4 * timeQuantum)); // update time allotment
+          priorities[index] = priorities[index] === 3 ? 1 : Math.min(3, Math.max(1, priorities[index] + 1)); // update priority
+        }
+      } else { // if current process is shorter than timeQuantum
+        MLFQList.push({name: currentProcess['name'], length: currentProcess['length'] }); // simulate running the rest of the current process
+        indexList.splice(indexPointer, 1); // remove the process from the index list
+        indexPointer = (indexPointer === (indexList.length) ? 0 : indexPointer); // update indexPointer
+      }
+    };
+
+    // generate dataset for stacked bar chart
+    const chartData = MLFQList.map((process) => ({
+      label: 'Process ' + process.name,
+      data: [process.length],
+      backgroundColor: getColor(process.name),
+      barThickness: 30,
+      borderColor: 'darkgray',
+      borderWidth: 2,
+    }));
+    setBarData(chartData);
+  }, [processData]); // re-run whenever processData changes
+
+  // options for stacked bar chart
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false, // allows chart to be resized freely
+    indexAxis: 'y', // makes the chart horizontal
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          // custom legend order
+          generateLabels: (chart) => {
+            const originalLabels = chart.data.datasets.map((dataset, index) => ({
+              text: dataset.label,
+              fillStyle: dataset.backgroundColor,
+              datasetIndex: index,
+            }));
+  
+            // remove duplicate labels based on label and color
+            const uniqueLabels = [];
+            originalLabels.forEach((label) => {
+              // only add label if it's not already added to the uniqueLabels array
+              if (!uniqueLabels.some((unique) => unique.text === label.text && unique.fillStyle === label.fillStyle)) {
+                uniqueLabels.push(label);
+              }
+            });
+
+            // define the custom order based on the process labels
+            const customOrder = [
+              'Process A',
+              'Process B',
+              'Process C',
+              'Process D',
+              'Process E',
+              'Process F',
+              'Process G',
+              'Process H',
+              'Process I',
+            ];
+  
+            // sort the labels according to the custom order
+            return uniqueLabels.sort((a, b) => {
+              return customOrder.indexOf(a.text) - customOrder.indexOf(b.text);
+            });
+          },
+        },
+      },
+      tooltip: { enabled: true },
+    },
+    scales: {
+      x: {
+        beginAtZero: true, // start x-axis form 0
+        stacked: true, // enable stacking on the x-axis (horizontal axis)
+        title: {
+          display: true,
+          text: 'Time (ms)',
+        },
+      },
+      y: { stacked: true }, // enable stacking on the y-axis (vertical axis)
+    },
+  };
+
+  return (
+    <div style={{ width: '75%', height: '150px' }}>
+      <h2>MLFQ Algorithm</h2>
+      <Bar data={{ labels: ['MLFQ'], datasets: barData }} options={options} />
     </div>
   );
 }
